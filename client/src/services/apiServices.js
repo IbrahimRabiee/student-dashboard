@@ -1,6 +1,6 @@
 const BASE_URL = "http://localhost:5000/api";
 
-export const fetchingApi = async (token, endpoint, options = {}) => {
+export const fetchingApi = async (endpoint, options = {}, token) => {
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -9,9 +9,22 @@ export const fetchingApi = async (token, endpoint, options = {}) => {
       ...options.headers,
     },
   });
-  const data = await res.json();
+
+  // const data = await res.json();
+
+  // to handle cases where the response body is empty or not valid JSON
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  // handling unauthorized access and token expiration
+  if (res.status === 401) {
+    throw new Error(data.message || "Unauthorized");
+  }
   if (!res.ok) {
-    throw new Error(data.message || "Failed to fetch dashboard data");
+    throw new Error(data.message || "Request Failed");
   }
   return data;
 };

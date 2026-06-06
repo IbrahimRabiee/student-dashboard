@@ -6,23 +6,14 @@ import User from "../models/User.js";
 
 const authRouter = express.Router();
 
-const users = [
-  {
-    id: 1,
-    username: "Ibrahim",
-    email: "ibrahim@gmail.com",
-    password: await hashPassword("1022392004Ae"),
-  },
-];
-
 authRouter.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   // check whether all fields are provided
-  if (!username || !email || !password) {
-    return res
-      .status(400)
-      .json({ message: "Username, email, and password are required" });
+  if (!firstName || !lastName || !email || !password) {
+    return res.status(400).json({
+      message: "First name, last name, email, and password are required",
+    });
   }
   // validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,21 +37,25 @@ authRouter.post("/register", async (req, res) => {
       message: "Email already exists",
     });
   }
-  // console.log(`Registering user: ${username}`);
 
-  // save the user to a database or in-memory array
-  const newUser = new User({
+  // save the user to a database
+  const newUser = await new User({
     id: new mongoose.Types.ObjectId(),
-    username,
+    username: firstName + " " + lastName,
     email,
     password: await hashPassword(password),
   });
   await newUser.save();
 
-  // respond with success message and user data (excluding password)
+  const token = generateToken(newUser._id);
+  if (!token) {
+    return res.status(500).json({ message: "Failed to generate token" });
+  }
+
   res.status(201).json({
     message: "Data received",
-    data: {
+    token,
+    user: {
       id: newUser.id,
       username: newUser.username,
       email: newUser.email,

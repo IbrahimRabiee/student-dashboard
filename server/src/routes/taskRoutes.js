@@ -4,6 +4,20 @@ import Task from "../models/Task.js";
 
 const tasksRouter = express.Router();
 
+tasksRouter.get("/", verifyToken, async (req, res) => {
+  try {
+    const tasks = await Task.find({ user: req.user._id });
+
+    // if (tasks.length === 0) {
+    //   return res.status(404).json({ message: "No tasks found" });
+    // }
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: error || "Error fetching tasks" });
+  }
+});
+
 tasksRouter.post("/", verifyToken, async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -28,20 +42,6 @@ tasksRouter.post("/", verifyToken, async (req, res) => {
     res.status(201).json(newTask);
   } catch (error) {
     res.status(500).json({ message: error || "Error creating task" });
-  }
-});
-
-tasksRouter.get("/", verifyToken, async (req, res) => {
-  try {
-    const tasks = await Task.find({ user: req.user._id });
-
-    if (tasks.length === 0) {
-      return res.status(404).json({ message: "No tasks found" });
-    }
-
-    res.status(200).json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: error || "Error fetching tasks" });
   }
 });
 

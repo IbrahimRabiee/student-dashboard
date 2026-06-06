@@ -1,5 +1,6 @@
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (email) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return emailRegex.test(email);
 };
 
 const isValidPassword = (password) => {

@@ -10,7 +10,7 @@ const Tasks = () => {
   const [isCreating, setIsCreating] = useState(false); // State to control the visibility of the CreateTask component
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -23,15 +23,27 @@ const Tasks = () => {
 
         setTasks(data);
       } catch (error) {
+        if (error.message === "No tasks found") {
+          setTasks([]);
+          setError(null);
+          return;
+        }
+        if (
+          error.message === "Token expired" ||
+          error.message === "Invalid token" ||
+          error.message === "Unauthorized"
+        ) {
+          logout();
+          return;
+        }
         setError(error.message);
-        // console.error("Error fetching tasks:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTasks();
-  }, [token]);
+  }, []);
 
   const handleTaskCreated = (newTask) => {
     setTasks((prevTasks) => [...prevTasks, newTask]);
@@ -66,16 +78,22 @@ const Tasks = () => {
                     New Task
                   </button>
                 </div>
-                {tasks.map((task) => {
-                  return (
-                    <TaskCard
-                      key={task._id}
-                      task={task}
-                      token={token}
-                      onDeleteTask={handleTaskDeleted}
-                    />
-                  );
-                })}
+                {tasks.length === 0 ? (
+                  <p className="text-gray-500 text-lg">
+                    No tasks found. Create a new task to get started!
+                  </p>
+                ) : (
+                  tasks.map((task) => {
+                    return (
+                      <TaskCard
+                        key={task._id}
+                        task={task}
+                        token={token}
+                        onDeleteTask={handleTaskDeleted}
+                      />
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
