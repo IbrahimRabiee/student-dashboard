@@ -8,8 +8,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState();
   const { user, token } = useAuth();
-  // const { logout } = useAuth();
-  // logout();
+  const { logout } = useAuth();
 
   useEffect(() => {
     document.title = "Dashboard - Student Dashboard";
@@ -19,11 +18,19 @@ const Dashboard = () => {
         const data = await dashboardData(token);
 
         // ✅ success
-        console.log("Dashboard data:", data);
+        // console.log("Dashboard data:", data);
 
         setUserData(data);
         setError(null);
       } catch (error) {
+        if (
+          error.message === "Token expired" ||
+          error.message === "Invalid token" ||
+          error.message === "Unauthorized"
+        ) {
+          logout();
+          return;
+        }
         setError(error.message);
       } finally {
         setLoading(false);

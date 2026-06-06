@@ -6,12 +6,14 @@ import Navbar from "../components/Navbar";
 
 const MainLayout = () => {
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <Outlet />
+      <main className="flex-1 flex">
+        <Outlet />
+      </main>
       <ToastContainer className="top-24! right-10!" />
       {/* <footer /> */}
-    </>
+    </div>
   );
 };
 

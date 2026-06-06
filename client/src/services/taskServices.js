@@ -1,66 +1,37 @@
 import { fetchingApi } from "./apiServices";
 
 export const userTasks = async (token) => {
-  try {
-    const data = await fetchingApi(token, "/tasks", { method: "GET" });
-    if (!data) {
-      throw new Error("No data received from API");
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    throw error;
-  }
+  return await fetchingApi("/tasks", { method: "GET" }, token);
 };
 
 export const createTask = async (token, title, description) => {
-  try {
-    const data = await fetchingApi(token, "/tasks", {
+  return await fetchingApi(
+    "/tasks",
+    {
       method: "POST",
       body: JSON.stringify({ title, description }),
-    });
-    if (!data) {
-      throw new Error("No data received from API");
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    throw error;
-  }
+    },
+    token,
+  );
 };
 
 export const deleteTask = async (token, taskId) => {
-  try {
-    const data = await fetchingApi(token, `/tasks/${taskId}`, {
+  return await fetchingApi(
+    `/tasks/${taskId}`,
+    {
       method: "DELETE",
-    });
-    if (!data) {
-      throw new Error("No data received from API");
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    throw error;
-  }
+    },
+    token,
+  );
 };
 
 export const updateTask = async (token, taskId, title, description) => {
-  try {
-    const data = await fetchingApi(token, `/tasks/${taskId}`, {
+  return await fetchingApi(
+    `/tasks/${taskId}`,
+    {
       method: "PATCH",
       body: JSON.stringify({ title, description }),
-    });
-
-    if (!data) {
-      throw new Error("No data received from API");
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    throw error;
-  }
+    },
+    token,
+  );
 };
