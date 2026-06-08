@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/authContext";
 import { userTasks } from "../services/taskServices";
 import TaskCard from "../components/TaskCard";
-import CreateTask from "../components/CreateTask";
+import TaskFormModel from "../components/TaskFormModal";
 import "react-toastify/dist/ReactToastify.css";
 
 const Tasks = () => {
@@ -23,11 +23,6 @@ const Tasks = () => {
 
         setTasks(data);
       } catch (error) {
-        if (error.message === "No tasks found") {
-          setTasks([]);
-          setError(null);
-          return;
-        }
         if (
           error.message === "Token expired" ||
           error.message === "Invalid token" ||
@@ -47,6 +42,13 @@ const Tasks = () => {
 
   const handleTaskCreated = (newTask) => {
     setTasks((prevTasks) => [...prevTasks, newTask]);
+  };
+  const handleTaskUpdated = (updatedTask) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task._id === updatedTask._id ? updatedTask : task,
+      ),
+    );
   };
   const handleTaskDeleted = (taskId) => {
     setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId));
@@ -73,7 +75,7 @@ const Tasks = () => {
                 <div className="flex justify-end absolute top-4 right-4">
                   <button
                     onClick={() => setIsCreating(true)}
-                    className="px-6 py-3 font-semibold bg-blue-900 text-white rounded-md hover:cursor-pointer shadow-sm hover:shadow-lg hover:bg-blue-800 transition duration-150"
+                    className="px-6 py-3 font-semibold bg-blue-800 text-white rounded-md hover:cursor-pointer shadow-sm hover:shadow-lg hover:bg-blue-900 transition duration-150"
                   >
                     New Task
                   </button>
@@ -90,6 +92,7 @@ const Tasks = () => {
                         task={task}
                         token={token}
                         onDeleteTask={handleTaskDeleted}
+                        onUpdateTask={handleTaskUpdated}
                       />
                     );
                   })
@@ -98,9 +101,9 @@ const Tasks = () => {
             </div>
           </div>
           {isCreating && (
-            <CreateTask
+            <TaskFormModel
               onTaskCreated={handleTaskCreated}
-              setIsCreating={setIsCreating}
+              onClose={() => setIsCreating(false)}
               token={token}
             />
           )}
