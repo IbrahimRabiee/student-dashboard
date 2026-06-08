@@ -8,10 +8,6 @@ tasksRouter.get("/", verifyToken, async (req, res) => {
   try {
     const tasks = await Task.find({ user: req.user._id });
 
-    // if (tasks.length === 0) {
-    //   return res.status(404).json({ message: "No tasks found" });
-    // }
-
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: error || "Error fetching tasks" });
@@ -53,10 +49,24 @@ tasksRouter.delete("/:id", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "Task ID is required" });
     }
 
-    const task = await Task.findOneAndDelete({
-      _id: id,
-      user: req.user._id,
-    });
+    // const task = await Task.findOneAndDelete({
+    //   _id: id,
+    //   user: req.user._id,
+    // });
+
+    const task = await Task.findOne({ _id: id, user: req.user._id });
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    if (task.user.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this task" });
+    }
+
+    await task.deleteOne();
 
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -82,16 +92,22 @@ tasksRouter.patch("/:id", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    if (task.description === description && task.title === title) {
+      return res.status(400).json({ message: "No changes detected" });
+    }
+
     if (title) {
-      if (await Task.findOne({ title, user: req.user._id })) {
-        return res
-          .status(400)
-          .json({ message: "Task with this title already exists" });
+      if (task.description === description) {
+        if (await Task.findOne({ title, user: req.user._id })) {
+          return res
+            .status(400)
+            .json({ message: "Task with this title already exists" });
+        }
       }
       task.title = title;
     }
 
-    if (description) {
+    if (description || description === "") {
       task.description = description;
     }
 
