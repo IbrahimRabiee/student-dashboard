@@ -1,27 +1,8 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 
 const Navbar = () => {
-  const [isAuthed, setIsAuthed] = useState(false);
-  const { logout, isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        if (isAuthenticated) {
-          setIsAuthed(true);
-        } else {
-          setIsAuthed(false);
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthed(false);
-      }
-    };
-
-    checkAuth();
-  }, [isAuthenticated]);
+  const { logout } = useAuth();
 
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -30,31 +11,50 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="flex justify-end w-full bg-gray-600 p-4">
-      {isAuthed ? (
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 hover:cursor-pointer transition"
-        >
-          Logout
-        </button>
-      ) : (
-        <div className="space-x-4">
+    <>
+      <nav className="sticky top-0 z-50 border-b border-neutral-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+          <Link to="/dashboard" className="font-bold text-neutral-900">
+            Student Dashboard
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-primary-50 text-primary-700"
+                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                }`
+              }
+            >
+              Dashboard
+            </NavLink>
+
+            <NavLink
+              to="/tasks"
+              className={({ isActive }) =>
+                `rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-primary-50 text-primary-700"
+                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                }`
+              }
+            >
+              Tasks
+            </NavLink>
+          </div>
+
           <button
-            onClick={() => navigate("/register")}
-            className="px-4 py-2 bg-gray-800 text-white rounded shadow-sm hover:shadow-lg hover:bg-gray-900 hover:cursor-pointer transition"
+            onClick={handleLogout}
+            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 hover:shadow-lg hover:cursor-pointer transition"
           >
-            Register
-          </button>
-          <button
-            onClick={() => navigate("/login")}
-            className="px-4 py-2 bg-gray-800 text-white rounded shadow-sm hover:shadow-lg hover:bg-gray-900 hover:cursor-pointer transition"
-          >
-            Login
+            Logout
           </button>
         </div>
-      )}
-    </nav>
+      </nav>
+    </>
   );
 };
 

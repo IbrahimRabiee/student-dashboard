@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { isValidEmail, isValidPassword } from "../utils/registerValidation";
 import { registerUser } from "../services/authServices";
 import { useAuth } from "../context/authContext";
+import AuthLayout from "../components/AuthLayout";
+import AuthInput from "../components/AuthInput";
+import AuthButton from "../components/AuthButton";
+import { User, Mail, Lock } from "lucide-react";
 
 const Register = () => {
   const [firstName, setFirstName] = useState("");
@@ -10,7 +14,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
 
@@ -23,29 +27,41 @@ const Register = () => {
     e.preventDefault();
 
     // Validating inputs
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields");
+    const newErrors = {};
+
+    if (!firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!isValidEmail(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (!isValidPassword(password)) {
+      newErrors.password =
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character";
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    if (!isValidEmail(email)) {
-      setError("Please enter a valid email");
-      return;
-    }
-
-    if (!isValidPassword(password)) {
-      setError(
-        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
-      );
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    setError("");
+    setErrors({});
     setLoading(true);
 
     try {
@@ -56,86 +72,96 @@ const Register = () => {
       login(data);
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      setError(error.message || "An error occurred. Please try again.");
+      setErrors((prev) => ({
+        ...prev,
+        server: error.message || "An error occurred. Please try again.",
+      }));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-gray-300 p-6">
-      <div className=" w-full max-w-xl max-h-xl bg-gray-100 rounded-xl shadow-md p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold mb-2">
-            Welcome To Our Website!
-          </h1>
-          <p className="text-gray-700 text-sm">Please fill in your Details!</p>
-        </div>
-        <form
-          noValidate
-          className="flex flex-col space-y-4"
-          onSubmit={handleRegister}
-        >
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <div className="flex gap-2">
-            <input
-              className="px-6 py-3 rounded bg-white shadow-sm  w-full placeholder:text-sm 
-              focus:outline-none focus:ring-1 focus:ring-gray-800"
+    <>
+      <AuthLayout
+        title="Create your account ✨"
+        subtitle="Start organizing your academic life"
+      >
+        <form noValidate onSubmit={handleRegister} className="space-y-5">
+          <div className="flex gap-3">
+            <AuthInput
+              label="First Name"
+              icon={User}
               type="text"
-              id="firstName"
-              placeholder="First Name"
+              placeholder="Enter your first name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              error={errors.name}
             />
-            <input
-              className="px-6 py-3 rounded bg-white shadow-sm  w-full placeholder:text-sm 
-              focus:outline-none focus:ring-1 focus:ring-gray-800"
+
+            <AuthInput
+              label="Last Name"
+              icon={User}
               type="text"
-              id="lastName"
-              placeholder="Last Name"
+              placeholder="Enter your last name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              error={errors.name}
             />
           </div>
-          <input
-            className="px-6 py-3 rounded bg-white shadow-sm  w-full placeholder:text-sm 
-              focus:outline-none focus:ring-1 focus:ring-gray-800"
+
+          <AuthInput
+            label="Email"
+            icon={Mail}
             type="email"
-            id="email"
-            placeholder="Email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={errors.email}
           />
-          <input
-            className="px-6 py-3 rounded bg-white shadow-sm  w-full  placeholder:text-sm 
-              focus:outline-none focus:ring-1 focus:ring-gray-800"
+
+          <AuthInput
+            label="Password"
+            icon={Lock}
             type="password"
-            id="password"
-            placeholder="Password"
+            placeholder="Create a password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
           />
-          <input
-            className="px-6 py-3 rounded bg-white shadow-sm  w-full  placeholder:text-sm 
-              focus:outline-none focus:ring-1 focus:ring-gray-800"
+
+          <AuthInput
+            label="Confirm password"
+            icon={Lock}
             type="password"
-            id="confirmPassword"
-            placeholder="Confirm Password"
+            placeholder="Confirm your password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            error={errors.confirmPassword}
           />
-          <button
-            className={`cursor-pointer bg-black text-white py-2 rounded hover:bg-gray-800 transition duration-200 ${
-              loading ? "opacity-50 pointer-events-none cursor-not-allowed" : ""
-            }`}
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Registering..." : "Register"}
-          </button>
+
+          {errors.server && (
+            <p className="text-danger-500 text-sm text-center">
+              {errors.server}
+            </p>
+          )}
+
+          <AuthButton loading={loading} loadingText="Creating account...">
+            Create account
+          </AuthButton>
+
+          <p className="text-center text-sm text-neutral-500">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="font-semibold text-primary-700 hover:text-primary-800 cursor-pointer"
+            >
+              Sign in
+            </Link>
+          </p>
         </form>
-      </div>
-    </div>
+      </AuthLayout>
+    </>
   );
 };
 
