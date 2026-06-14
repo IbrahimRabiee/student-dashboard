@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { isValidEmail, isValidPassword } from "../utils/loginValidation";
 import { loginUser } from "../services/authServices";
 import { useAuth } from "../context/authContext";
+import AuthLayout from "../components/AuthLayout";
+import AuthInput from "../components/AuthInput";
+import AuthButton from "../components/AuthButton";
+import { Mail, Lock } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
 
@@ -20,22 +25,27 @@ const Login = () => {
     e.preventDefault();
 
     // Validating inputs
-    if (!email || !password) {
-      setError("Please fill in all fields");
+    const newErrors = {};
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!isValidEmail(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (!isValidPassword(password)) {
+      newErrors.password =
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    if (!isValidEmail(email)) {
-      setError("Please enter a valid email");
-      return;
-    }
-
-    if (!isValidPassword(password)) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-
-    setError("");
+    setErrors({});
     setLoading(true);
 
     try {
@@ -46,57 +56,92 @@ const Login = () => {
       login(data);
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      setError(error.message || "An error occurred. Please try again.");
+      setErrors((prev) => ({
+        ...prev,
+        server: error.message || "An error occurred. Please try again.",
+      }));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-gray-300 p-6">
-      <div className=" w-full max-w-xl max-h-xl bg-gray-100 rounded-xl shadow-md p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold mb-2">Welcome Back!</h1>
-          <p className="text-gray-700 text-sm">
-            Please enter your login details!
-          </p>
-        </div>
-        <form
-          noValidate
-          className="flex flex-col space-y-4"
-          onSubmit={handleLogin}
-        >
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <input
-            className="px-6 py-3 rounded bg-white shadow-sm  w-full placeholder:text-sm 
-              focus:outline-none focus:ring-1 focus:ring-gray-800"
+    <>
+      <AuthLayout
+        title="Welcome back 👋"
+        subtitle="Sign in to continue to your dashboard"
+      >
+        <form noValidate onSubmit={handleLogin} className="space-y-5">
+          <AuthInput
+            label="Email"
+            icon={Mail}
             type="email"
-            id="email"
-            placeholder="Email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={errors.email}
           />
-          <input
-            className="px-6 py-3 rounded bg-white shadow-sm  w-full  placeholder:text-sm 
-              focus:outline-none focus:ring-1 focus:ring-gray-800"
+
+          <AuthInput
+            label="Password"
+            icon={Lock}
             type="password"
-            id="password"
-            placeholder="Password"
+            placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
           />
+
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 text-neutral-600">
+              <input type="checkbox" className="accent-primary-700" />
+              Remember me
+            </label>
+
+            <Link
+              to="/forgot-password"
+              className="text-primary-700 font-medium"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          {errors.server && (
+            <p className="text-danger-500 text-sm text-center">
+              {errors.server}
+            </p>
+          )}
+
+          <AuthButton loading={loading} loadingText="Logging in...">
+            Sign in
+          </AuthButton>
+
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-neutral-200" />
+            <span className="text-sm text-neutral-400">or continue with</span>
+            <div className="h-px flex-1 bg-neutral-200" />
+          </div>
+
           <button
-            className={`cursor-pointer bg-gray-800 text-white py-2 rounded hover:bg-gray-800 transition duration-200 ${
-              loading ? "opacity-50 pointer-events-none cursor-not-allowed" : ""
-            }`}
-            type="submit"
-            disabled={loading}
+            type="button"
+            className="w-full rounded-xl border border-neutral-300 py-3 font-semibold text-neutral-700 hover:bg-neutral-50 transition"
           >
-            {loading ? "Logging in..." : "Login"}
+            <FaGoogle className="inline mr-2" />
+            Continue with Google
           </button>
+
+          <p className="text-center text-sm text-neutral-500">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="font-semibold text-primary-700 hover:text-primary-800 cursor-pointer"
+            >
+              Create an account
+            </Link>
+          </p>
         </form>
-      </div>
-    </div>
+      </AuthLayout>
+    </>
   );
 };
 

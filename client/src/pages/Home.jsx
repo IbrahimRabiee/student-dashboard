@@ -12,14 +12,14 @@ const Home = () => {
     <div className="container mx-auto p-4 flex justify-between items-center">
       <h1>Home</h1>
       <nav>
-        <ul className="flex space-x-4 font-medium text-blue-500">
-          <li className="hover:text-blue-700">
+        <ul className="flex space-x-4 font-medium text-primary-500">
+          <li className="hover:text-primary-700">
             <Link to="/login">Login</Link>
           </li>
-          <li className="hover:text-blue-700">
+          <li className="hover:text-primary-700">
             <Link to="/register">Register</Link>
           </li>
-          <li className="hover:text-blue-700">
+          <li className="hover:text-primary-700">
             <Link to="/dashboard">Dashboard</Link>
           </li>
         </ul>

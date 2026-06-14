@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
+import { X, FileText, AlignLeft } from "lucide-react";
 import { createTask, updateTask } from "../services/taskServices";
-import { IoIosClose } from "react-icons/io";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const TaskFormModel = ({
+const TaskFormModal = ({
   mode = "create",
   task,
   onTaskCreated,
@@ -18,28 +18,27 @@ const TaskFormModel = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  const isEditMode = mode === "edit";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!title.trim()) {
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
       return setTitleValidation("Title is required");
     }
 
-    if (title.trim().length < 3 || title.trim().length > 100) {
+    if (trimmedTitle.length < 3 || trimmedTitle.length > 100) {
       return setTitleValidation("Title must be between 3 and 100 characters");
     }
+
     setSubmitting(true);
 
-    const isEditMode = mode === "edit";
     try {
       const data = isEditMode
-        ? await updateTask(token, task._id, title.trim(), description)
-        : await createTask(token, title.trim(), description);
-
-      if (!data) {
-        throw new Error("No data received from API");
-      }
+        ? await updateTask(token, task._id, trimmedTitle, description)
+        : await createTask(token, trimmedTitle, description);
 
       if (isEditMode) {
         onTaskUpdated(data);
@@ -51,17 +50,17 @@ const TaskFormModel = ({
 
       onClose();
     } catch (error) {
-      return setError(error.message);
+      setError(error.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Close modal on Escape key press (for FUN:))
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") onClose();
     };
+
     window.addEventListener("keydown", handleEsc);
 
     return () => {
@@ -71,93 +70,129 @@ const TaskFormModel = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/30 px-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-125 h-125 flex flex-col items-center bg-white p-6 border border-blue-200 rounded-md shadow-lg relative"
+        className="w-full max-w-lg rounded-3xl border border-white/70 bg-white/95 p-6 shadow-2xl backdrop-blur-md"
         onClick={(e) => e.stopPropagation()}
       >
-        <IoIosClose
-          onClick={() => {
-            onClose();
-          }}
-          className="absolute top-4 right-4 text-4xl text-red-600 cursor-pointer"
-        />
-        <h2 className="text-2xl font-bold text-blue-900 mb-4">
-          {mode === "create" ? "Create New Task" : "Edit Task"}
-        </h2>
-        <form
-          onSubmit={(e) => handleSubmit(e)}
-          className="flex flex-col w-full mt-10 gap-2"
-        >
-          <div className="flex flex-col justify-start items-start gap-1">
-            <input
-              value={title}
-              type="text"
-              onChange={(e) => {
-                setTitle(e.target.value);
-                setTitleValidation(null);
-                setError(null);
-              }}
-              onBlur={(e) =>
-                !e.target.value.trim()
-                  ? setTitleValidation("Title is required")
-                  : setTitleValidation(null)
-              }
-              placeholder="Task title"
-              className={`border w-full border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-1 focus:ring-blue-500 ${titleValidation ? "border-red-500" : ""}`}
-            />
-            <span
-              className={`text-sm text-red-500 ml-2 ${titleValidation ? "opacity-100" : "opacity-0"}`}
-            >
-              {titleValidation ? titleValidation : ""}
-            </span>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-primary-700">
+              {isEditMode ? "Edit task" : "New task"}
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-neutral-900">
+              {isEditMode ? "Update your task" : "Create a new task"}
+            </h2>
+            <p className="mt-2 text-sm text-neutral-500">
+              {isEditMode
+                ? "Make changes to your task details."
+                : "Add a task to keep your study workflow organized."}
+            </p>
           </div>
-          <div className="flex flex-col justify-start items-start gap-1">
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Task description"
-              className="border w-full border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-500 ml-2">Optional</span>
-          </div>
-          {/* <input
-                      type="text"
-                      placeholder="Task due date"
-                      className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    /> */}
-          <p className="text-red-500">{error}</p>
-          <div
-            className={
-              mode === "edit"
-                ? "flex justify-end gap-4 mt-4"
-                : "flex justify-end mt-4"
-            }
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700"
+            aria-label="Close modal"
           >
-            {mode === "edit" && (
+            <X size={22} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-sm font-medium text-neutral-700">
+              Task title
+            </label>
+
+            <div
+              className={`mt-2 flex items-center gap-3 rounded-xl border px-4 py-3 transition focus-within:ring-[1.5px] ${
+                titleValidation
+                  ? "border-danger-500 focus-within:ring-danger-400"
+                  : "border-neutral-300 focus-within:ring-primary-600"
+              }`}
+            >
+              <FileText size={20} className="text-neutral-400" />
+
+              <input
+                value={title}
+                type="text"
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setTitleValidation("");
+                  setError(null);
+                }}
+                onBlur={(e) =>
+                  !e.target.value.trim()
+                    ? setTitleValidation("Title is required")
+                    : setTitleValidation("")
+                }
+                placeholder="e.g. Review MongoDB models"
+                className="w-full bg-transparent text-neutral-800 outline-none placeholder:text-neutral-400"
+              />
+            </div>
+
+            {titleValidation && (
+              <p className="mt-1 text-sm text-danger-500">{titleValidation}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-neutral-700">
+              Description
+            </label>
+
+            <div className="mt-2 flex items-start gap-3 rounded-xl border border-neutral-300 px-4 py-3 transition focus-within:ring-[1.5px] focus-within:ring-primary-600">
+              <AlignLeft size={20} className="mt-1 text-neutral-400" />
+
+              <textarea
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setError(null);
+                }}
+                placeholder="Add extra details, notes, or context..."
+                rows={4}
+                className="w-full resize-none bg-transparent text-neutral-800 outline-none placeholder:text-neutral-400"
+              />
+            </div>
+
+            <p className="mt-1 text-sm text-neutral-400">Optional</p>
+          </div>
+
+          {error && (
+            <p className="rounded-xl bg-danger-50 px-4 py-3 text-sm text-danger-600">
+              {error}
+            </p>
+          )}
+
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+            {isEditMode && (
               <button
                 type="button"
-                className={`px-6 py-3  ${submitting ? "opacity-50 pointer-events-none cursor-not-allowed" : ""} font-semibold bg-gray-300 text-gray-700 rounded-md hover:cursor-pointer shadow-sm hover:shadow-lg hover:bg-gray-400 transition duration-150`}
-                onClick={() => onClose()}
+                onClick={onClose}
                 disabled={submitting}
+                className="rounded-xl border border-neutral-300 px-5 py-3 font-semibold text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Discard
               </button>
             )}
+
             <button
               type="submit"
               disabled={submitting}
-              className={`px-6 py-3  ${submitting ? "opacity-50 pointer-events-none cursor-not-allowed" : ""} font-semibold bg-blue-800 text-white rounded-md hover:cursor-pointer shadow-sm hover:shadow-lg hover:bg-blue-900 transition duration-150`}
+              className="rounded-xl bg-primary-700 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-primary-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting
-                ? mode === "edit"
+                ? isEditMode
                   ? "Updating..."
                   : "Creating..."
-                : mode === "edit"
-                  ? "Update Task"
-                  : "Create Task"}
+                : isEditMode
+                  ? "Update task"
+                  : "Create task"}
             </button>
           </div>
         </form>
@@ -166,4 +201,4 @@ const TaskFormModel = ({
   );
 };
 
-export default TaskFormModel;
+export default TaskFormModal;

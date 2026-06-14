@@ -2,17 +2,17 @@ import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 
 const MainLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 flex">
+    <div className="min-h-screen bg-slate-50 md:flex">
+      <Sidebar />
+
+      <main className="flex-1 p-6">
         <Outlet />
       </main>
-      <ToastContainer className="top-24! right-10!" />
-      {/* <footer /> */}
+      <ToastContainer />
     </div>
   );
 };
