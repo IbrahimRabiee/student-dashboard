@@ -47,7 +47,7 @@ No polished UI (Almost!)
 ///////////////////// next commit!!!
 git add .
 git commit -m "Redesign core UI and establish design system"
-git push -u origin feature/auth-ui-polish
+git push -u origin feature/ui-redesign
 
 Work on auth pages polish, not new auth systems yet.
 
